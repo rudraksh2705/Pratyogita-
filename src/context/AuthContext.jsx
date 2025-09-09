@@ -1,85 +1,90 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from "react";
+import API from "../services/apiClient";
+import toast from "react-hot-toast";
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in from localStorage
-    const user = localStorage.getItem('currentUser');
-    if (user) {
-      setCurrentUser(JSON.parse(user));
+    const storedToken = localStorage.getItem("token");
+
+    if (storedToken) {
+      setToken(storedToken);
+
+      // Fetch user profile from backend
+      API.get("/auth/me")
+        .then((res) => {
+          setCurrentUser(res.data.data.user);
+        })
+        .catch(() => {
+          // if token is invalid/expired
+          localStorage.removeItem("token");
+          setToken(null);
+          setCurrentUser(null);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  const login = (email, password) => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const user = users.find(u => u.email === email && u.password === password);
-    
-    if (user) {
-      const { password: _, ...userWithoutPassword } = user;
-      setCurrentUser(userWithoutPassword);
-      localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
-      return { success: true, user: userWithoutPassword };
-    } else {
-      return { success: false, message: 'Invalid email or password' };
+  const login = async (email, password) => {
+    try {
+      const res = await API.post("/auth/login", { email, password });
+      const { user, token } = res.data.data;
+
+      setCurrentUser(user);
+      setToken(token);
+      localStorage.setItem("token", token);
+
+      toast.success("Login successful");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Login failed");
     }
   };
 
-  const signup = (name, email, password, username) => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    
-    // Check if user already exists
-    if (users.find(u => u.email === email || u.username === username)) {
-      return { success: false, message: 'User already exists' };
+  const signup = async (name, email, password) => {
+    try {
+      const res = await API.post("/auth/signup", { name, email, password });
+      const { user, token } = res.data.data;
+
+      setCurrentUser(user);
+      setToken(token);
+      localStorage.setItem("token", token);
+
+      toast.success("Signup successful");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Signup failed");
     }
-
-    const newUser = {
-      id: Date.now(),
-      name,
-      email,
-      password,
-      username,
-      role: 'student'
-    };
-
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-
-    const { password: _, ...userWithoutPassword } = newUser;
-    setCurrentUser(userWithoutPassword);
-    localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
-    
-    return { success: true, user: userWithoutPassword };
   };
 
   const logout = () => {
     setCurrentUser(null);
-    localStorage.removeItem('currentUser');
+    setToken(null);
+    localStorage.removeItem("token");
+    toast.success("Logged out");
   };
 
   const value = {
     currentUser,
+    token,
     login,
     signup,
     logout,
-    loading
+    loading,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
