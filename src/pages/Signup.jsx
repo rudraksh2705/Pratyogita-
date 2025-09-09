@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Paper,
@@ -7,39 +7,40 @@ import {
   Typography,
   Link,
   Alert,
-  Container
-} from '@mui/material';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+  Container,
+} from "@mui/material";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    username: '',
-    password: '',
-    confirmPassword: ''
+    name: "",
+    email: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
   const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const validateForm = () => {
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return false;
     }
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError("Password must be at least 6 characters long");
       return false;
     }
     return true;
@@ -47,7 +48,7 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (!validateForm()) {
       return;
@@ -56,14 +57,19 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      const result = signup(formData.name, formData.email, formData.password, formData.username);
+      const result = signup(
+        formData.name,
+        formData.email,
+        formData.password,
+        formData.username
+      );
       if (result.success) {
-        navigate('/contests');
+        navigate("/contests");
       } else {
         setError(result.message);
       }
     } catch (err) {
-      setError('An error occurred during registration');
+      setError("An error occurred during registration");
     } finally {
       setLoading(false);
     }
@@ -74,16 +80,21 @@ const Signup = () => {
       <Box
         sx={{
           marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
         }}
       >
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+        <Paper elevation={3} sx={{ p: 4, width: "100%" }}>
           <Typography component="h1" variant="h4" align="center" gutterBottom>
             Join Pratyogita
           </Typography>
-          <Typography variant="h6" align="center" color="textSecondary" gutterBottom>
+          <Typography
+            variant="h6"
+            align="center"
+            color="textSecondary"
+            gutterBottom
+          >
             Create your account
           </Typography>
 
@@ -158,13 +169,14 @@ const Signup = () => {
               sx={{ mt: 3, mb: 2 }}
               disabled={loading}
             >
-              {loading ? 'Creating Account...' : 'Sign Up'}
+              {loading ? "Creating Account..." : "Sign Up"}
             </Button>
             <Box textAlign="center">
               <Link component={RouterLink} to="/login" variant="body2">
                 {"Already have an account? Sign In"}
               </Link>
             </Box>
+            <GoogleSignInButton />
           </Box>
         </Paper>
       </Box>

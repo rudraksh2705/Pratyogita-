@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import API from "../services/apiClient";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
@@ -13,6 +14,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,13 +25,11 @@ export const AuthProvider = ({ children }) => {
     if (storedToken) {
       setToken(storedToken);
 
-      // Fetch user profile from backend
       API.get("/auth/me")
         .then((res) => {
           setCurrentUser(res.data.data.user);
         })
         .catch(() => {
-          // if token is invalid/expired
           localStorage.removeItem("token");
           setToken(null);
           setCurrentUser(null);
@@ -70,6 +70,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Google login
+  const loginWithGoogle = async (id_token) => {
+    try {
+      const res = await API.post("/auth/google", { id_token });
+      const { user, token } = res.data.data; // adjust if backend wraps inside .data.data
+
+      setCurrentUser(user);
+      setToken(token);
+      localStorage.setItem("token", token);
+
+      toast.success("Google login successful");
+      navigate("/contests");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Google login failed");
+    }
+  };
+
   const logout = () => {
     setCurrentUser(null);
     setToken(null);
@@ -82,6 +99,7 @@ export const AuthProvider = ({ children }) => {
     token,
     login,
     signup,
+    loginWithGoogle,
     logout,
     loading,
   };
