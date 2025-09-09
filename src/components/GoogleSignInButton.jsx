@@ -1,10 +1,8 @@
 import { useEffect } from "react";
 import { useAuth } from "../context/AuthContext"; // adjust path if needed
-import { useNavigate } from "react-router-dom";
 
 const GoogleSignInButton = () => {
   const { loginWithGoogle } = useAuth();
-  const navigate = useNavigate();
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
@@ -33,12 +31,11 @@ const GoogleSignInButton = () => {
 
   const handleCredentialResponse = (response) => {
     const id_token = response.credential;
-    
+
     const res = loginWithGoogle(id_token); //  use AuthContext method
-    if (res.success) navigate("/contests")
   };
 
-  return <div id="googleSignInDiv"></div>;
+  return <div id="googleSignInDiv" style={{ padding: "10px" }}></div>;
 };
 
 export default GoogleSignInButton;
