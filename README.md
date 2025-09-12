@@ -7,7 +7,7 @@ A desktop-first online MCQ test platform built with React, Material UI.
 
 1. Clone the repository:
    ```bash
-   git clone  
+   git clone https://github.com/rudraksh2705/Pratyogita-.git
    ```
 2. Navigate to the project directory:
    ```bash  
